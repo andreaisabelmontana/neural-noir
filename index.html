@@ -3,57 +3,72 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Neural Noir — Built From Scratch</title>
-<meta name="description" content="An original from-scratch build of Neural Noir: an AI detective game where an LLM runs the mystery — suspects, clues and a culprit — and you reason your way to whodunit." />
+<title>Neural Noir — a deductive mystery engine</title>
+<meta name="description" content="Neural Noir: a procedural detective game whose Python engine generates mysteries with a guaranteed unique deductive solution. Play a real generated case in the browser. The LLM is optional." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   :root{
     --accent:#1f2937; --accent-soft:#eceef1; --ink:#11151c; --muted:#4b5563;
-    --line:#dce0e6; --bg:#f8fafc; --card:#ffffff;
+    --line:#dce0e6; --bg:#f8fafc; --card:#ffffff; --good:#15803d; --bad:#b91c1c;
     --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:860px;margin:0 auto;padding:0 28px}
-  a{color:var(--accent);text-decoration:none}
-  a:hover{text-decoration:underline}
+  .wrap{max-width:900px;margin:0 auto;padding:0 28px}
+  a{color:var(--accent)}
   code{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);padding:.1em .4em;border-radius:4px;color:#111827}
   h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.15;letter-spacing:-.01em}
-  header.hero{padding:88px 0 56px;border-bottom:1px solid var(--line)}
-  .eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 22px}
+  header.hero{padding:80px 0 48px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 20px}
   h1{font-size:clamp(2.6rem,6vw,4.1rem);margin:0 0 18px}
-  .lede{font-size:1.22rem;color:var(--muted);max-width:62ch;margin:0 0 28px}
+  .lede{font-size:1.18rem;color:var(--muted);max-width:64ch;margin:0 0 26px}
   .meta{display:flex;flex-wrap:wrap;gap:10px;font-size:.82rem}
   .chip{font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted);background:var(--card)}
-  section{padding:54px 0;border-bottom:1px solid var(--line)}
+  section{padding:50px 0;border-bottom:1px solid var(--line)}
   .kicker{font-family:var(--mono);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
-  h2{font-size:clamp(1.7rem,3.4vw,2.3rem);margin:0 0 20px}
-  h3{font-size:1.2rem;margin:0 0 6px}
-  p{margin:0 0 18px;max-width:68ch}
+  h2{font-size:clamp(1.7rem,3.4vw,2.3rem);margin:0 0 18px}
+  p{margin:0 0 18px;max-width:70ch}
   .muted{color:var(--muted)}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:8px}
   .tool{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
   .tool .t{font-family:var(--mono);font-size:.78rem;color:var(--accent);letter-spacing:.04em;margin-bottom:8px}
   .tool h3{font-size:1.05rem;font-family:var(--sans);font-weight:600;margin-bottom:6px}
   .tool p{font-size:.92rem;color:var(--muted);margin:0}
-  ol.flow{counter-reset:s;list-style:none;padding:0;margin:24px 0 0}
-  ol.flow li{position:relative;padding:18px 0 18px 56px;border-top:1px solid var(--line)}
-  ol.flow li:before{counter-increment:s;content:counter(s,decimal-leading-zero);position:absolute;left:0;top:18px;font-family:var(--mono);font-size:.8rem;color:var(--accent);border:1px solid var(--line);border-radius:8px;width:38px;height:38px;display:grid;place-items:center;background:var(--card)}
-  ol.flow li h3{font-family:var(--sans);font-size:1.02rem;font-weight:600;margin:0 0 4px}
-  ol.flow li p{margin:0;font-size:.93rem;color:var(--muted)}
-  .callout{background:var(--accent-soft);border:1px solid #ccd2da;border-radius:14px;padding:24px 26px;margin-top:8px}
-  .callout p:last-child{margin:0}
+
+  /* --- game --- */
+  .game{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 24px 28px;margin-top:8px}
+  .game .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .game label{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  select,button{font-family:var(--sans);font-size:.92rem;border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:var(--bg);color:var(--ink);cursor:pointer}
+  button{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  button.ghost{background:var(--bg);color:var(--ink)}
+  button:hover{opacity:.92}
+  .case-title{font-family:var(--serif);font-size:1.35rem;margin:4px 0 2px}
+  .case-sub{color:var(--muted);font-size:.95rem;margin-bottom:18px}
+  .clues{list-style:none;padding:0;margin:0 0 18px}
+  .clues li{border-top:1px solid var(--line);padding:12px 0 12px 30px;position:relative;font-size:.96rem}
+  .clues li:before{content:"";position:absolute;left:0;top:16px;width:14px;height:14px;border:1px solid var(--accent);border-radius:50%}
+  .clues li.herring{color:var(--muted)}
+  .tag{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:2px 8px;margin-left:8px;color:var(--muted)}
+  .suspects{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0 18px}
+  .sus{border:1px solid var(--line);border-radius:11px;padding:12px 14px;background:var(--bg)}
+  .sus.out{opacity:.4;text-decoration:line-through}
+  .sus.lead{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+  .sus .nm{font-weight:600;font-size:.96rem;margin-bottom:8px}
+  .sus button{width:100%;font-size:.8rem;padding:6px 8px}
+  .verdict{font-family:var(--serif);font-size:1.2rem;margin:10px 0 6px}
+  .verdict.win{color:var(--good)} .verdict.lose{color:var(--bad)}
+  pre.chain{font-family:var(--mono);font-size:.78rem;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:16px;overflow:auto;white-space:pre-wrap;margin-top:8px}
+  .note{font-size:.82rem;color:var(--muted);margin-top:14px;border-left:3px solid var(--line);padding-left:14px}
+
   ul.learn{list-style:none;padding:0;margin:8px 0 0}
-  ul.learn li{padding:14px 0 14px 30px;border-top:1px solid var(--line);position:relative;color:var(--muted);max-width:68ch}
+  ul.learn li{padding:14px 0 14px 30px;border-top:1px solid var(--line);position:relative;color:var(--muted);max-width:70ch}
   ul.learn li:before{content:"→";position:absolute;left:0;color:var(--accent);font-family:var(--mono)}
   ul.learn li b{color:var(--ink);font-weight:600}
-  .price{display:flex;align-items:baseline;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 26px;margin-top:8px}
-  .price .n{font-family:var(--serif);font-size:2.6rem;color:var(--accent);line-height:1}
-  .price .l{color:var(--muted);font-size:.95rem}
-  footer{padding:48px 0 80px}
+  footer{padding:46px 0 80px}
   .credit{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
   .credit .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
   footer .fine{font-size:.8rem;color:var(--muted);margin-top:22px;text-align:center}
@@ -62,71 +77,53 @@
 <body>
 <header class="hero">
   <div class="wrap">
-    <p class="eyebrow">From-Scratch Build · AI Reasoning</p>
+    <p class="eyebrow">Python engine · Guaranteed-solvable deduction</p>
     <h1>Neural Noir</h1>
-    <p class="lede">A body in the study, a houseful of suspects, and a detective who never runs out of patience for your questions. Neural Noir is an AI detective game where a language model runs the whole mystery — generating the case, role-playing every suspect, and holding a hidden, <i>consistent</i> truth you have to uncover. I rebuilt it from scratch because making an LLM keep a secret and never contradict itself is a genuine reasoning challenge.</p>
+    <p class="lede">A procedural detective game with a real deductive core. The engine generates a mystery from a seed — suspects, a hidden culprit, and clues — and <i>proves the clues uniquely identify the culprit</i> before handing you the case. Pure Python; the LLM is optional flavour. Play a real generated case below.</p>
     <div class="meta">
-      <span class="chip">LLM</span><span class="chip">Game design</span><span class="chip">Prompt engineering</span>
-      <span class="chip">State &amp; memory</span><span class="chip">Consistency</span><span class="chip">Interactive fiction</span>
+      <span class="chip">Constraint solver</span><span class="chip">Procedural generation</span>
+      <span class="chip">Unique-solution guarantee</span><span class="chip">855 tests</span><span class="chip">LLM optional</span>
     </div>
   </div>
 </header>
 
 <section>
   <div class="wrap">
-    <p class="kicker">What it is</p>
-    <h2>A mystery with a mind behind it</h2>
-    <p>Neural Noir hands the role of game master to a language model. It invents a crime — a culprit, a motive, a tangle of alibis — and then lets you interrogate the suspects, each voiced by the model in character. You ask questions, catch contradictions, follow leads, and finally name who did it. The fun is that the case is fresh every time and the suspects answer in natural language.</p>
-    <p>The hard engineering is keeping it honest. The model must hold a fixed underlying truth, never accidentally reveal the culprit, never contradict an earlier answer, and let innocent suspects lie or mislead <i>plausibly</i>. That's a problem of state, memory and carefully bounded prompting — the real substance under the storytelling.</p>
-    <div class="price">
-      <div class="n">1 truth</div>
-      <div class="l">a single hidden, consistent solution the model must hold across the whole interrogation — the core engineering challenge.</div>
-    </div>
+    <p class="kicker">Play a real case</p>
+    <h2>The deduction, in your browser</h2>
+    <p>These cases were generated by the Python engine (<code>python demo.py 7</code>) and committed verbatim — suspects, clues and the exact per-clue elimination sets. The buttons below run the <i>same</i> constraint logic the Python solver uses: a suspect survives only if every clue implicates them. Interrogate to see who each clue clears, then accuse.</p>
+    <div class="game" id="game"></div>
+    <p class="note">This page is static (GitHub Pages) and runs no LLM — it replays committed, engine-generated cases. The real generator, constraint solver and uniqueness guarantee live in the Python package in this repo; the optional LLM hook only restyles text and never touches the deduction.</p>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <p class="kicker">The stack</p>
-    <h2>From a generated crime to a solved case</h2>
-    <p class="muted">An LLM as game master, kept consistent by design.</p>
+    <p class="kicker">The engine</p>
+    <h2>From a seed to a provably solvable case</h2>
     <div class="grid">
-      <div class="tool"><div class="t">setup</div><h3>Case generation</h3><p>The model invents a self-consistent mystery: culprit, motive, suspects and clues.</p></div>
-      <div class="tool"><div class="t">truth</div><h3>Hidden state</h3><p>The real solution is stored and held back — the model answers around it without leaking it.</p></div>
-      <div class="tool"><div class="t">voices</div><h3>Suspect role-play</h3><p>Each suspect is prompted in character, free to deflect or lie within the fixed facts.</p></div>
-      <div class="tool"><div class="t">memory</div><h3>Conversation state</h3><p>Track what's been asked and answered so the story never contradicts itself.</p></div>
-      <div class="tool"><div class="t">guardrails</div><h3>Prompt design</h3><p>Carefully bound prompts so the model stays in character and never blurts the answer.</p></div>
-      <div class="tool"><div class="t">resolve</div><h3>Accusation check</h3><p>Compare the player's verdict against the hidden truth to win or lose the game.</p></div>
+      <div class="tool"><div class="t">generator</div><h3>Seeded cast</h3><p>Suspects share overlapping attributes so no single clue gives anyone away.</p></div>
+      <div class="tool"><div class="t">clues</div><h3>Culprit-true constraints</h3><p>Clues are drawn from the culprit's own attributes, so a true clue never clears the culprit.</p></div>
+      <div class="tool"><div class="t">solver</div><h3>Constraint propagation</h3><p>Keep a suspect only if every clue implicates them; the survivors are the answer.</p></div>
+      <div class="tool"><div class="t">guarantee</div><h3>Verify, then accept</h3><p>The generator runs the solver and only keeps a case when exactly one survivor remains — the culprit.</p></div>
+      <div class="tool"><div class="t">herrings</div><h3>Harmless red herrings</h3><p>True facts phrased to match everyone — flavour that can never break uniqueness.</p></div>
+      <div class="tool"><div class="t">optional</div><h3>LLM flavour hook</h3><p>If a key is set, an LLM restyles the prose. It never decides clues or the verdict.</p></div>
     </div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <p class="kicker">Architecture</p>
-    <h2>How a case plays out</h2>
-    <p>The model runs the mystery while a thin layer keeps it honest:</p>
-    <ol class="flow">
-      <li><h3>Generate</h3><p>Create a consistent case and lock in the hidden solution.</p></li>
-      <li><h3>Interrogate</h3><p>The player questions suspects, each answered in character.</p></li>
-      <li><h3>Constrain</h3><p>Prompts and stored state keep answers consistent and the culprit concealed.</p></li>
-      <li><h3>Deduce</h3><p>The player pieces together contradictions and clues.</p></li>
-      <li><h3>Accuse</h3><p>The final guess is checked against the hidden truth.</p></li>
-    </ol>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <p class="kicker">Reflection</p>
-    <h2>What rebuilding it taught me</h2>
+    <p class="kicker">Why it's real</p>
+    <h2>The uniqueness guarantee is tested, not asserted</h2>
     <ul class="learn">
-      <li><b>Consistency is the hard part.</b> Generating a story is easy; keeping a hidden truth intact across a long interrogation is the real work.</li>
-      <li><b>State lives outside the model.</b> The reliable truth has to be stored and managed by your code — you can't trust the model to just remember it.</li>
-      <li><b>Prompts are game rules.</b> What a suspect can and can't say is enforced by prompt design — that's where the game balance lives.</li>
-      <li><b>Plausible lying is a feature.</b> Innocent suspects must mislead believably without breaking the fixed facts — a delicate prompting line.</li>
-      <li><b>LLMs are great game masters.</b> Open-ended, in-character, infinitely patient narration is something only a language model makes easy.</li>
+      <li><b>Exactly one solution.</b> For hundreds of seeds and cast sizes 3–8, the solver returns one suspect and it equals the planted culprit.</li>
+      <li><b>Clues do real work.</b> Removing any necessary clue makes the solver return more than one suspect — the case goes ambiguous.</li>
+      <li><b>Minimal clue sets.</b> No redundant real clue survives generation; each one is load-bearing.</li>
+      <li><b>Red herrings stay harmless.</b> They implicate everyone; dropping them all leaves the same unique culprit.</li>
+      <li><b>Reproducible.</b> The same seed yields an identical mystery every time.</li>
     </ul>
+    <p class="muted" style="margin-top:18px">Run it yourself: <code>pip install -r requirements.txt</code> then <code>python -m pytest -q</code> (855 passing) and <code>python demo.py</code>.</p>
   </div>
 </section>
 
@@ -134,10 +131,103 @@
   <div class="wrap">
     <div class="credit">
       <div class="k">About this build</div>
-      <p style="margin:0">An original, from-scratch build by <b>Andrea</b> — written to learn building games on top of LLMs: case generation, hidden-state management, in-character role-play, conversation memory and consistency-preserving prompt design. Plain HTML/CSS, deployed on GitHub Pages.</p>
+      <p style="margin:0">An original, from-scratch build by <b>Andrea</b>: a procedural mystery engine in pure Python with a guaranteed-unique deductive solution, an interactive game loop, and an optional (never required) LLM flavour hook. The browser game above replays real, engine-generated cases. Plain HTML/CSS, deployed on GitHub Pages.</p>
     </div>
     <p class="fine">Built from scratch by Andrea · one of an ongoing series of learning builds.</p>
   </div>
 </footer>
+
+<script>
+const CASES = [{"seed":7,"title":"Murder Under the Conservatory Glass","crime":"the shooting of the art dealer Lucian Mercer","culprit":"Captain Reyes","suspects":["Captain Reyes","Inspector-General Pace","Professor Lott","Madame Duval","Sister Brevik"],"clues":[{"text":"Every weapon in the house had been recently cleaned, including the kitchen knife.","red_herring":true,"necessary":false,"implicates":["Captain Reyes","Inspector-General Pace","Professor Lott","Madame Duval","Sister Brevik"]},{"text":"The culprit reached the estate by a hired cab.","red_herring":false,"necessary":true,"implicates":["Captain Reyes","Professor Lott"]},{"text":"The whole party had passed through the billiard room earlier that evening.","red_herring":true,"necessary":false,"implicates":["Captain Reyes","Inspector-General Pace","Professor Lott","Madame Duval","Sister Brevik"]},{"text":"The culprit was seen in the billiard room at the time of the crime.","red_herring":false,"necessary":true,"implicates":["Captain Reyes","Sister Brevik"]}]},{"seed":99,"title":"A Death at Blackwater Hall","crime":"the strangling of the heiress Cordelia Vane","culprit":"Sister Brevik","suspects":["Mrs. Fenwick","Mr. Calloway","Captain Reyes","Sister Brevik","Colonel Hargreave"],"clues":[{"text":"Whoever did it was driven by professional jealousy.","red_herring":false,"necessary":true,"implicates":["Mrs. Fenwick","Sister Brevik"]},{"text":"Old letters hint that more than one guest knew of professional jealousy.","red_herring":true,"necessary":false,"implicates":["Mrs. Fenwick","Mr. Calloway","Captain Reyes","Sister Brevik","Colonel Hargreave"]},{"text":"The killing was done with the lead pipe.","red_herring":false,"necessary":true,"implicates":["Captain Reyes","Sister Brevik","Colonel Hargreave"]},{"text":"The whole party had passed through the study earlier that evening.","red_herring":true,"necessary":false,"implicates":["Mrs. Fenwick","Mr. Calloway","Captain Reyes","Sister Brevik","Colonel Hargreave"]}]},{"seed":2024,"title":"Murder Under the Conservatory Glass","crime":"the strangling of the heiress Cordelia Vane","culprit":"Lady Orme","suspects":["Colonel Hargreave","Lady Orme","Sister Brevik","Dr. Vane","Madame Duval"],"clues":[{"text":"The killing was done with the lead pipe.","red_herring":false,"necessary":true,"implicates":["Colonel Hargreave","Lady Orme"]},{"text":"A witness recalls the culprit had left-handedness.","red_herring":false,"necessary":true,"implicates":["Lady Orme","Madame Duval"]},{"text":"Several guests, by chance, shared left-handedness.","red_herring":true,"necessary":false,"implicates":["Colonel Hargreave","Lady Orme","Sister Brevik","Dr. Vane","Madame Duval"]},{"text":"The whole party had passed through the servants' stair earlier that evening.","red_herring":true,"necessary":false,"implicates":["Colonel Hargreave","Lady Orme","Sister Brevik","Dr. Vane","Madame Duval"]}]}];
+
+const el = document.getElementById('game');
+let state = {};
+
+// Solver: a suspect survives iff every clue implicates them.
+function survivors(c){
+  return c.suspects.filter(s => c.clues.every(cl => cl.implicates.includes(s)));
+}
+function esc(t){return t.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+
+function render(){
+  const c = state.case;
+  const surv = survivors(c);
+  let html = '';
+  html += `<div class="row"><label for="sel">Case</label>
+    <select id="sel">${CASES.map((x,i)=>`<option value="${i}" ${i===state.idx?'selected':''}>seed ${x.seed} — ${esc(x.title)}</option>`).join('')}</select>
+    <button class="ghost" id="reset">Reset</button></div>`;
+  html += `<div class="case-title">${esc(c.title)}</div>`;
+  html += `<div class="case-sub">Case: ${esc(c.crime)}. ${c.suspects.length} suspects — examine the clues, interrogate, then accuse.</div>`;
+
+  html += `<ul class="clues">`;
+  c.clues.forEach((cl,i)=>{
+    const tag = cl.red_herring ? `<span class="tag">red herring</span>` : (cl.necessary?`<span class="tag">necessary</span>`:'');
+    html += `<li class="${cl.red_herring?'herring':''}">${esc(cl.text)}${tag}</li>`;
+  });
+  html += `</ul>`;
+
+  html += `<div class="suspects">`;
+  c.suspects.forEach(s=>{
+    const isOut = !surv.includes(s);
+    const isLead = state.interrogated===s;
+    html += `<div class="sus ${isOut?'out':''} ${isLead?'lead':''}">
+      <div class="nm">${esc(s)}</div>
+      <button class="ghost" data-ask="${esc(s)}">Interrogate</button>
+      <button data-accuse="${esc(s)}">Accuse</button></div>`;
+  });
+  html += `</div>`;
+
+  if(state.interrogated){
+    const s = state.interrogated;
+    const against = c.clues.filter(cl=>!cl.implicates.includes(s));
+    const fits = c.clues.filter(cl=>cl.implicates.includes(s));
+    let t = `You interrogate ${s}.\n`;
+    t += against.length ? `  Counts AGAINST clearing them:\n`+against.map(cl=>`    - ${cl.text}`).join('\n')+'\n'
+                        : `  No clue rules them out.\n`;
+    t += `  Consistent with:\n`+fits.map(cl=>`    - ${cl.text}`).join('\n');
+    html += `<pre class="chain">${esc(t)}</pre>`;
+  }
+
+  if(state.verdict){
+    const won = state.accused===c.culprit;
+    html += `<div class="verdict ${won?'win':'lose'}">You accused ${esc(state.accused)}. ${won?'CORRECT — case closed.':'WRONG — the culprit was '+esc(c.culprit)+'.'}</div>`;
+    html += `<pre class="chain">${esc(deduction(c))}</pre>`;
+  } else {
+    html += `<div class="note">Tip: ${surv.length} suspect${surv.length!==1?'s':''} currently fit every clue. The engine guarantees it narrows to exactly one.</div>`;
+  }
+
+  el.innerHTML = html;
+  wire();
+}
+
+// Replays the elimination clue by clue, exactly like noir.solver.deduction_chain.
+function deduction(c){
+  let pool = c.suspects.slice();
+  const lines = [];
+  c.clues.forEach(cl=>{
+    const elim = pool.filter(s=>!cl.implicates.includes(s));
+    if(elim.length){
+      pool = pool.filter(s=>cl.implicates.includes(s));
+      lines.push(`CLUE: ${cl.text}\n  -> rules out: ${elim.join(', ')}`);
+    } else {
+      lines.push(`CLUE: ${cl.text}\n  -> consistent with everyone still standing${cl.red_herring?' (red herring -- changes nothing)':''}`);
+    }
+  });
+  if(pool.length===1) lines.push(`DEDUCTION: only ${pool[0]} fits every clue. That is the culprit.`);
+  return lines.join('\n');
+}
+
+function load(idx){
+  state = {idx, case: CASES[idx], interrogated:null, accused:null, verdict:false};
+  render();
+}
+function wire(){
+  el.querySelector('#sel').onchange = e=>load(+e.target.value);
+  el.querySelector('#reset').onclick = ()=>load(state.idx);
+  el.querySelectorAll('[data-ask]').forEach(b=>b.onclick=()=>{state.interrogated=b.dataset.ask;render();});
+  el.querySelectorAll('[data-accuse]').forEach(b=>b.onclick=()=>{state.accused=b.dataset.accuse;state.verdict=true;render();});
+}
+load(0);
+</script>
 </body>
 </html>

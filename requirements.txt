@@ -1,0 +1,9 @@
+# The engine, solver and game are pure Python standard library -- no runtime
+# dependencies are required to generate, solve or play a mystery.
+
+# Testing only:
+pytest>=7.0
+
+# Optional: enables the cosmetic LLM flavour hook (noir/llm.py). The game is
+# fully playable without it. Uncomment to use:
+# openai>=1.0
